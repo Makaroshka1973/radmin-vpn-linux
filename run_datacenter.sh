@@ -243,6 +243,7 @@ if [ ! -f "$RADMIN/RvControlSvc.exe" ]; then
         echo "    ./run_datacenter.sh --installer /path/to/Radmin_VPN_*.exe"
         exit 1
     fi
+    verify_installer "$INSTALLER" || die "installer failed verification — refusing to run it"
     say "Installing Radmin VPN..."
     mkdir -p "$WINEPREFIX"
     wineboot --init 2>/dev/null

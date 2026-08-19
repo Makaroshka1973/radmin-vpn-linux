@@ -69,10 +69,81 @@ boot_wineserver() {
 # Radmin's own in-app updater will otherwise push a newer build into a live
 # prefix mid-session, which kills the GUI and crashes the running service.
 # Shipping the current build is what keeps that updater with nothing to do.
-RADMIN_VERSION="${RADMIN_VERSION:-2.1.4951.1}"
+RADMIN_DEFAULT_VERSION="2.1.4951.1"
+RADMIN_VERSION="${RADMIN_VERSION:-$RADMIN_DEFAULT_VERSION}"
 radmin_installer_name() { printf 'Radmin_VPN_%s.exe' "$RADMIN_VERSION"; }
 radmin_installer_url() {
     printf 'https://download.radmin-vpn.com/download/files/Radmin_VPN_%s.exe' "$RADMIN_VERSION"
+}
+
+# ── Installer integrity ─────────────────────────────────────────────────────────
+# sha256 of Radmin_VPN_2.1.4951.1.exe (54277224 bytes) as published on
+# download.radmin-vpn.com. Confirmed to be the genuine vendor build: the file
+# carries an Authenticode signature whose embedded SHA-256 digest matches the
+# PE content, signed by "Famatech Corp." (C=VG) under DigiCert Trusted Root G4.
+#
+# Pinning the version without pinning the bytes leaves TLS as the only thing
+# standing between the prefix and a substituted installer, so this constant and
+# RADMIN_VERSION must be bumped as a pair.
+RADMIN_SHA256_PINNED="e16711e2e3e59f6603f51f437197215b1914a3d8316e1f633260178b959921f7"
+
+# Resolve which hash (if any) applies to the build we are about to run. Someone
+# testing a different release supplies RADMIN_SHA256 alongside RADMIN_VERSION;
+# without it there is nothing to check an unknown build against, and refusing to
+# run would break the documented RADMIN_VERSION override.
+if [ -n "${RADMIN_SHA256:-}" ]; then
+    :
+elif [ "$RADMIN_VERSION" = "$RADMIN_DEFAULT_VERSION" ]; then
+    RADMIN_SHA256="$RADMIN_SHA256_PINNED"
+else
+    RADMIN_SHA256=""
+fi
+
+# sha256 of $1 on stdout. Tries the three tools that realistically exist on a
+# host that can already build this project; returns non-zero when none do.
+_sha256_of() {
+    if command -v sha256sum >/dev/null 2>&1; then
+        sha256sum -- "$1" | cut -d' ' -f1
+    elif command -v shasum >/dev/null 2>&1; then
+        shasum -a 256 -- "$1" | cut -d' ' -f1
+    elif command -v openssl >/dev/null 2>&1; then
+        openssl dgst -sha256 "$1" | sed 's/.*= *//'
+    else
+        return 1
+    fi
+}
+
+# Check $1 before Wine executes it. Non-zero ONLY when the file claims to be the
+# pinned build and its hash disagrees — every other case warns and passes, so an
+# explicit --installer and a user-set RADMIN_VERSION keep working. The installer
+# runs unsandboxed under Wine with sudo already primed, so this is the last point
+# at which a substituted .exe can still be stopped cheaply.
+verify_installer() {
+    local f="$1" got name
+    [ -f "$f" ] || return 0
+    name="$(basename -- "$f")"
+    if [ -z "$RADMIN_SHA256" ]; then
+        warn "No pinned sha256 for Radmin $RADMIN_VERSION — installer NOT verified."
+        warn "  Set RADMIN_SHA256 to check it, or unset RADMIN_VERSION for the validated build."
+        return 0
+    fi
+    if [ "$name" != "$(radmin_installer_name)" ]; then
+        warn "$name is not the validated $RADMIN_VERSION build — installer NOT verified."
+        return 0
+    fi
+    if ! got="$(_sha256_of "$f")"; then
+        warn "No sha256sum/shasum/openssl on PATH — installer NOT verified."
+        return 0
+    fi
+    if [ "$got" != "$RADMIN_SHA256" ]; then
+        warn "Installer sha256 MISMATCH — refusing to run it."
+        warn "  file:     $f"
+        warn "  expected: $RADMIN_SHA256"
+        warn "  actual:   $got"
+        return 1
+    fi
+    good "Installer sha256 verified ($RADMIN_VERSION)"
+    return 0
 }
 
 # Version installed in $WINEPREFIX, read offline from the registry (no wine call).

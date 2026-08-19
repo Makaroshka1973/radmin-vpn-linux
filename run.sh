@@ -220,6 +220,19 @@ install_radmin() {
     if [ -z "$INSTALLER" ] || [ ! -f "$INSTALLER" ]; then
         die "installer not found"
     fi
+    # Covers every path ensure_installer can take: fresh download, cached copy,
+    # --installer, and the any-version fallback.
+    if ! verify_installer "$INSTALLER"; then
+        # Drop our own poisoned cache so the next run refetches, but never delete
+        # a file the user pointed us at themselves.
+        case "$INSTALLER" in
+            "$DOWNLOAD_DIR"/*)
+                rm -f -- "$INSTALLER"
+                die "installer failed verification; cached copy removed — re-run to download it again" ;;
+            *)
+                die "installer failed verification — refusing to run it" ;;
+        esac
+    fi
     mkdir -p "$WINEPREFIX"
     wineboot --init 2>/dev/null
     if command -v winetricks >/dev/null 2>&1; then

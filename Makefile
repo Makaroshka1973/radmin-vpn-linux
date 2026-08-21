@@ -17,6 +17,8 @@ DDK_INC := $(firstword $(wildcard \
     /usr/x86_64-w64-mingw32/sys-root/mingw/include/ddk \
     /usr/x86_64-w64-mingw32/sys-root/mingw/include \
     /usr/x86_64-w64-mingw32/include \
+    $(DDK_PATH64) \
+    $(DDK_PATH32) \
 ))
 ifeq ($(DDK_INC),)
 DDK_INC = /usr/x86_64-w64-mingw32/include/ddk

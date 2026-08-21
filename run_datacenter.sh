@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # run_datacenter.sh - Radmin VPN Datacenter Edition
 # Runs on headless VPS (no display server) using Xvfb + noVNC for web-based GUI access
 # Usage: ./run_datacenter.sh [--installer /path/to/Radmin_VPN_*.exe] [--vnc-port PORT] [--web-port PORT] [--vnc-password PASS] [--web-bind ADDR]

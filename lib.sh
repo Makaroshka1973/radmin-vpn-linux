@@ -160,6 +160,26 @@ version_gt() {
     [ "$1" != "$2" ] && [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | tail -n1)" = "$1" ]
 }
 
+# ── Component installation ──────────────────────────────────────────────────────
+# Copy our build artifacts into the prefix. Shared by run.sh, run_vps.sh and
+# run_datacenter.sh, which all set $BUILD_DIR, $WINEPREFIX and $RADMIN first.
+# cp -f matters: a read-only $BUILD_DIR (Nix store, 0444) makes the copies
+# read-only too, and a plain cp then fails on the second run.
+install_components() {
+    say "Installing components..."
+    chmod +x "$BUILD_DIR/tap_bridge" 2>/dev/null || true
+    cp -f "$BUILD_DIR/rvpnnetmp.sys" "$WINEPREFIX/drive_c/windows/system32/drivers/"
+    cp -f "$BUILD_DIR/adapter_hook.dll" "$RADMIN/"
+    cp -f "$BUILD_DIR/rvpn_launcher.exe" "$RADMIN/"
+    cp -f "$BUILD_DIR/netsh.exe" "$WINEPREFIX/drive_c/windows/syswow64/netsh.exe"
+    cp -f "$BUILD_DIR/netsh64.exe" "$WINEPREFIX/drive_c/windows/system32/netsh.exe"
+    # Replace Radmin's real NDIS driver installer with a no-op stub.
+    # RvControlSvc runs drvinst.exe at runtime to load NetMP60_1_1_64.sys, which
+    # aborts Wine 11.x via NdisInitializeReadWriteLock (issue #12). Our rvpnnetmp.sys
+    # replaces that adapter, so the real NDIS driver must never load.
+    cp -f "$BUILD_DIR/drvinst.exe" "$RADMIN/drvinst.exe"
+}
+
 # ── Wine desktop-integration hygiene ────────────────────────────────────────────
 # winemenubuilder.exe rewrites the HOST's desktop file associations (.exe, .msi,
 # .lnk, .reg, .chm, ...) so they open in whatever prefix spawned it. Left enabled,

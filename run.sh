@@ -282,18 +282,7 @@ elif [ -n "$INSTALLED_VERSION" ] && version_gt "$RADMIN_VERSION" "$INSTALLED_VER
     warn "Radmin VPN $INSTALLED_VERSION installed, $RADMIN_VERSION validated — run './run.sh --update' to upgrade (keeps your prefix and RID)"
 fi
 
-say "Installing components..."
-chmod +x "$BUILD_DIR/tap_bridge" 2>/dev/null || true
-cp -f "$BUILD_DIR/rvpnnetmp.sys" "$WINEPREFIX/drive_c/windows/system32/drivers/"
-cp -f "$BUILD_DIR/adapter_hook.dll" "$RADMIN/"
-cp -f "$BUILD_DIR/rvpn_launcher.exe" "$RADMIN/"
-cp -f "$BUILD_DIR/netsh.exe" "$WINEPREFIX/drive_c/windows/syswow64/netsh.exe"
-cp -f "$BUILD_DIR/netsh64.exe" "$WINEPREFIX/drive_c/windows/system32/netsh.exe"
-# Replace Radmin's real NDIS driver installer with a no-op stub.
-# RvControlSvc runs drvinst.exe at runtime to load NetMP60_1_1_64.sys, which
-# aborts Wine 11.x via NdisInitializeReadWriteLock (issue #12). Our rvpnnetmp.sys
-# replaces that adapter, so the real NDIS driver must never load.
-cp -f "$BUILD_DIR/drvinst.exe" "$RADMIN/drvinst.exe"
+install_components
 
 # (the real NDIS driver is scrubbed offline in step 1b, before any wine call)
 

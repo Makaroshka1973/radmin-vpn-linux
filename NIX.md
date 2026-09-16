@@ -39,7 +39,7 @@ To add Radmin VPN to your NixOS system configuration:
 
 ### 2. Add package to your environment:
 
-In your configuration file (e.g., `configuration.nix or `packages.nix`):
+In your configuration file (e.g., `configuration.nix` or `packages.nix`):
 
 ```nix
 { pkgs, ... }:

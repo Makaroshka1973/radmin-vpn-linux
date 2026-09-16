@@ -15,7 +15,6 @@
         mingw32 = pkgs.pkgsCross.mingw32;
 
         ddk64 = "${mingwW64.windows.mingw_w64_headers}/include/ddk";
-        ddk32 = "${mingw32.windows.mingw_w64_headers}/include/ddk";
       in
       {
         # Shell for development
@@ -34,14 +33,13 @@
           ];
           shellHook = ''
             export DDK_PATH64="${ddk64}"
-            export DDK_PATH32="${ddk32}"
           '';
         };
 
         # Package for NixOS
         packages.default = pkgs.stdenv.mkDerivation rec {
           pname = "radmin-vpn-linux";
-          version = "1.1.0";
+          version = self.shortRev or "dirty";
           src = self;
 
           nativeBuildInputs = [
@@ -61,10 +59,6 @@
 
           preBuild = ''
             export DDK_PATH64="${ddk64}"
-            export DDK_PATH32="${ddk32}"
-
-            echo "Patching scripts to force file overwrite..."
-            find . -type f -name "*.sh" -exec sed -i 's/cp /cp -f /g' {} +
           '';
 
           installPhase = ''
@@ -85,18 +79,27 @@
               pkgs.procps 
               pkgs.gnugrep 
               pkgs.coreutils
+              pkgs.gnused
+              pkgs.gawk
+              pkgs.wget
+              pkgs.iptables
             ]}"
 
             makeWrapper $out/share/radmin-vpn-linux/run.sh $out/bin/radmin-vpn-linux \
               --prefix PATH : "$runtimePath" \
+              --suffix PATH : "/run/wrappers/bin" \
               --run 'export WINEPREFIX="$HOME/.local/share/radmin-vpn/wineprefix"'
 
+
             makeWrapper $out/share/radmin-vpn-linux/run_datacenter.sh $out/bin/radmin-vpn-datacenter \
-              --prefix PATH : "$runtimePath:${pkgs.lib.makeBinPath [ pkgs.x11vnc pkgs.xvfb pkgs.novnc ]}" \
-              --run 'export WINEPREFIX="$HOME/.local/share/radmin-vpn/wineprefix"'
+              --prefix PATH : "$runtimePath:${pkgs.lib.makeBinPath [ pkgs.x11vnc pkgs.xvfb pkgs.novnc pkgs.python3Packages.websockify ]}" \
+              --suffix PATH : "/run/wrappers/bin" \
+              --run 'export WINEPREFIX="$HOME/.local/share/radmin-vpn/wineprefix"' \
+              --set NOVNC_PATH "${pkgs.novnc}/share/webapps/novnc"
             
             makeWrapper $out/share/radmin-vpn-linux/run_vps.sh $out/bin/radmin-vpn-vps \
               --prefix PATH : "$runtimePath" \
+              --suffix PATH : "/run/wrappers/bin" \
               --run 'export WINEPREFIX="$HOME/.local/share/radmin-vpn/wineprefix"'
 
             runHook postInstall

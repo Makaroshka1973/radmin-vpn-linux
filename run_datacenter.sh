@@ -42,7 +42,7 @@ VNC_DISPLAY=:99
 VNC_PORT=5900
 WEB_PORT=6080
 VNC_PASSWORD=""
-NOVNC_PATH=""
+NOVNC_PATH="${NOVNC_PATH:-}"
 # Web (noVNC) bind address. Default 127.0.0.1 = reachable only via SSH tunnel.
 # Pass --web-bind 0.0.0.0 to expose it publicly (only with --vnc-password!).
 WEB_BIND="127.0.0.1"

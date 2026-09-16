@@ -1,7 +1,8 @@
 # Build artifacts
 build/
 packaging/dist/
-result/
+result
+result-*
 *.o
 *.a
 *.so

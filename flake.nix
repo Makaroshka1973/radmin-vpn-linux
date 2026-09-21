@@ -85,11 +85,12 @@
               pkgs.iptables
             ]}"
 
+            # NOTE: We use makeWrapper instead of wrapProgram here because the upstream scripts resolve BUILD_DIR via `dirname $0`.
+            # makeWrapper leaves argv0 alone, whereas wrapProgram overrides it, which would silently break the build paths.
             makeWrapper $out/share/radmin-vpn-linux/run.sh $out/bin/radmin-vpn-linux \
               --prefix PATH : "$runtimePath" \
               --suffix PATH : "/run/wrappers/bin" \
               --run 'export WINEPREFIX="$HOME/.local/share/radmin-vpn-linux/wineprefix"'
-
 
             makeWrapper $out/share/radmin-vpn-linux/run_datacenter.sh $out/bin/radmin-vpn-datacenter \
               --prefix PATH : "$runtimePath:${pkgs.lib.makeBinPath [ pkgs.x11vnc pkgs.xvfb pkgs.novnc pkgs.python3Packages.websockify ]}" \
@@ -115,6 +116,7 @@
             homepage = "https://github.com/baptisterajaut/radmin-vpn-linux";
             license = licenses.gpl3Only;
             platforms = platforms.linux;
+            mainProgram = "radmin-vpn-linux";
           };
         };
       }))

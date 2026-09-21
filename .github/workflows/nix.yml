@@ -2,6 +2,9 @@ name: Nix Build
 
 on:
   push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
 
 jobs:
   nix-build:
@@ -17,3 +20,5 @@ jobs:
 
     - name: Run Nix Build
       run: nix build
+    - run: test -x result/bin/radmin-vpn-linux
+    - run: test -f result/share/radmin-vpn-linux/build/rvpnnetmp.sys

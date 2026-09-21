@@ -88,19 +88,19 @@
             makeWrapper $out/share/radmin-vpn-linux/run.sh $out/bin/radmin-vpn-linux \
               --prefix PATH : "$runtimePath" \
               --suffix PATH : "/run/wrappers/bin" \
-              --run 'export WINEPREFIX="$HOME/.local/share/radmin-vpn/wineprefix"'
+              --run 'export WINEPREFIX="$HOME/.local/share/radmin-vpn-linux/wineprefix"'
 
 
             makeWrapper $out/share/radmin-vpn-linux/run_datacenter.sh $out/bin/radmin-vpn-datacenter \
               --prefix PATH : "$runtimePath:${pkgs.lib.makeBinPath [ pkgs.x11vnc pkgs.xvfb pkgs.novnc pkgs.python3Packages.websockify ]}" \
               --suffix PATH : "/run/wrappers/bin" \
-              --run 'export WINEPREFIX="$HOME/.local/share/radmin-vpn/wineprefix"' \
-              --set NOVNC_PATH "${pkgs.novnc}/share/webapps/novnc"
+              --set NOVNC_PATH "${pkgs.novnc}/share/webapps/novnc" \
+              --run 'export WINEPREFIX="$HOME/.local/share/radmin-vpn-linux/wineprefix"'
             
             makeWrapper $out/share/radmin-vpn-linux/run_vps.sh $out/bin/radmin-vpn-vps \
               --prefix PATH : "$runtimePath" \
               --suffix PATH : "/run/wrappers/bin" \
-              --run 'export WINEPREFIX="$HOME/.local/share/radmin-vpn/wineprefix"'
+              --run 'export WINEPREFIX="$HOME/.local/share/radmin-vpn-linux/wineprefix"'
 
             runHook postInstall
           '';

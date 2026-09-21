@@ -102,6 +102,11 @@
               --suffix PATH : "/run/wrappers/bin" \
               --run 'export WINEPREFIX="$HOME/.local/share/radmin-vpn-linux/wineprefix"'
 
+            makeWrapper $out/share/radmin-vpn-linux/health_check.sh $out/bin/radmin-vpn-health-check \
+              --prefix PATH : "$runtimePath:${pkgs.lib.makeBinPath [ pkgs.nettools pkgs.nftables pkgs.glibc.bin ]}" \
+              --suffix PATH : "/run/wrappers/bin" \
+              --run 'export WINEPREFIX="$HOME/.local/share/radmin-vpn-linux/wineprefix"'
+
             runHook postInstall
           '';
 
